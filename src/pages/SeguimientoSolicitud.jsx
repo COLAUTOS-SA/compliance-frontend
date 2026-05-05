@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 
 const RAW_API = import.meta.env.VITE_API_URL;
 const API_URL =
-  RAW_API && !RAW_API.startsWith("/")
+  RAW_API
     ? RAW_API.replace(/\/$/, "")
     : "https://compliance.colautos.co/api";
 
@@ -48,28 +48,17 @@ const formatDate = (iso) => {
 
 export default function SeguimientoUsuario() {
   const { user } = useAuth();
+  const isCounterpartyUser = user?.role === "usuario";
 
   // Si no hay sesión → al login
-  if (!user) return <Navigate to="/login" replace />;
+  const redirectToLogin = !user;
 
   // Si entra alguien que NO es contraparte normal → opcional: lo sacas
-  if (user.role !== "usuario") {
-    return (
-      <div className="max-w-3xl mx-auto p-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-gray-900">No autorizado</h2>
-          <p className="text-sm text-gray-600">
-            Esta vista es solo para contrapartes que consultan su solicitud.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  const showUnauthorized = user && !isCounterpartyUser;
   // Tomamos correo y documento desde la sesión
   const email = useMemo(
     () =>
-      (user.email || user.username || user.correo || "")
+      (user?.email || user?.username || user?.correo || "")
         .toString()
         .trim()
         .toLowerCase(),
@@ -77,7 +66,7 @@ export default function SeguimientoUsuario() {
   );
   const numeroDocumento = useMemo(
     () =>
-      (user.numeroDocumento || user.nro_doc || user.documento || "")
+      (user?.numeroDocumento || user?.nro_doc || user?.documento || "")
         .toString()
         .trim(),
     [user]
@@ -97,6 +86,8 @@ export default function SeguimientoUsuario() {
 
   useEffect(() => {
     const load = async () => {
+      if (!user || !isCounterpartyUser) return;
+
       if (!email) {
         setError("No se encontró el correo en la sesión del usuario.");
         return;
@@ -182,7 +173,22 @@ export default function SeguimientoUsuario() {
     };
 
     load();
-  }, [email, numeroDocumento]);
+  }, [email, isCounterpartyUser, numeroDocumento, user]);
+
+  if (redirectToLogin) return <Navigate to="/login" replace />;
+
+  if (showUnauthorized) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-gray-900">No autorizado</h2>
+          <p className="text-sm text-gray-600">
+            Esta vista es solo para contrapartes que consultan su solicitud.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">

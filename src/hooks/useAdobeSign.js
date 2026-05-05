@@ -172,7 +172,10 @@ export const useAdobeSign = (apiUrl) => {
               message: "✅ Documento firmado correctamente",
             }));
 
-            stopPolling();
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
           }
         } catch (err) {
           console.error("Polling error:", err);
@@ -212,6 +215,7 @@ export const useAdobeSign = (apiUrl) => {
   return {
     adobeState,
     initiateSignature,
+    getSigningUrl,
     checkSignatureStatus,
     startPolling,
     stopPolling,

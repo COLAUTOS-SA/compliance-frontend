@@ -30,22 +30,6 @@ function mapRoleToTipoContraparteId(role) {
   }
 }
 
-// Mapea el rol a tipo de contraparte en string (para Adobe Sign)
-function mapRoleToTipoContraparte(role) {
-  switch (role) {
-    case "proveedores":
-      return "PROVEEDOR";
-    case "accionistas":
-      return "ACCIONISTA";
-    case "clientes":
-      return "CLIENTE";
-    case "empleados":
-      return "EMPLEADO";
-    default:
-      return null;
-  }
-}
-
 function mapSegmentSlugToSegmentId(segmento) {
   // IDs alineados con tabla segmento en BD (1..14)
   // Se mantienen aliases legacy para no romper rutas antiguas.

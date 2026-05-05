@@ -21,7 +21,7 @@ import {
 // URL base del backend
 const RAW_API = import.meta.env.VITE_API_URL;
 const API_URL =
-  RAW_API && !RAW_API.startsWith("/")
+  RAW_API
     ? RAW_API.replace(/\/$/, "")
     : "https://compliance.colautos.co/api";
 
@@ -133,25 +133,13 @@ async function fetchJson(url, opts) {
 
 export default function AdminConsole() {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") {
-    return (
-      <div className="max-w-3xl mx-auto p-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Acceso restringido
-          </h2>
-          <p className="text-sm text-gray-600">
-            Solo usuarios con rol <strong>admin</strong>.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const isAdmin = user?.role === "admin";
+  const redirectToLogin = !user;
+  const showRestricted = user && !isAdmin;
 
   // ----- filtros
   const [type, setType] = useState(COUNTERPART_TYPES[0].key);
-  const segments = SEGMENTS_BY_TYPE[type] || [];
+  const segments = useMemo(() => SEGMENTS_BY_TYPE[type] || [], [type]);
   const [segment, setSegment] = useState(segments[0]?.slug || "");
 
   useEffect(() => {
@@ -192,7 +180,7 @@ export default function AdminConsole() {
   // Carga principal
   useEffect(() => {
     const load = async () => {
-      if (!segment) {
+      if (!isAdmin || !segment) {
         setRows([]);
         setArchivosAll([]);
         setGrid({});
@@ -220,8 +208,7 @@ export default function AdminConsole() {
 
         // Segmento actual (requiere segmentId en adminCatalogs)
         const currentSegmentObj =
-          (SEGMENTS_BY_TYPE[type] || []).find((s) => s.slug === segment) ||
-          null;
+          segments.find((s) => s.slug === segment) || null;
         const segmentId = currentSegmentObj?.segmentId || null;
 
         // join solicitud + contraparte
@@ -244,6 +231,7 @@ export default function AdminConsole() {
               tipoDocumento: c.Tipo_doc,
               numeroDocumento: c.Nro_doc,
               firmadoUrl: sol.conocimiento_contrapartes,
+              archivoRespuestaUrl: sol.archivo_respuesta_ruta,
               fecha_actual: sol.fecha_actual,
               fecha_ult_actualizacion: sol.fecha_ult_actualizacion,
             };
@@ -290,7 +278,7 @@ export default function AdminConsole() {
     };
 
     load();
-  }, [type, segment]);
+  }, [isAdmin, segment, segments, type]);
 
   // openRow
   const openRow = useMemo(
@@ -506,6 +494,13 @@ export default function AdminConsole() {
 
       const archJson = await fetchJson(`${API_URL}/archivos`);
       setArchivosAll(archJson.data || []);
+      setRows((current) =>
+        current.map((row) =>
+          row.id_solicitud === openRow.id_solicitud
+            ? { ...row, archivoRespuestaUrl: json.data?.archivo_respuesta_ruta }
+            : row,
+        ),
+      );
       setResponseFile(null);
       setResponseMsg({ ok: "Archivo de respuesta cargado correctamente.", err: "" });
     } catch (e) {
@@ -514,6 +509,23 @@ export default function AdminConsole() {
       setUploadingResponse(false);
     }
   };
+
+  if (redirectToLogin) return <Navigate to="/login" replace />;
+
+  if (showRestricted) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Acceso restringido
+          </h2>
+          <p className="text-sm text-gray-600">
+            Solo usuarios con rol <strong>admin</strong>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-4">
@@ -827,6 +839,16 @@ export default function AdminConsole() {
                     {uploadingResponse ? "Cargando..." : "Guardar archivo de respuesta"}
                   </button>
                 </div>
+                {openRow.archivoRespuestaUrl && (
+                  <a
+                    href={`${API_URL}/files/download?path=${encodeURIComponent(openRow.archivoRespuestaUrl)}&name=respuesta-oficial`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block text-xs font-medium text-indigo-700 underline"
+                  >
+                    Ver archivo de respuesta actual
+                  </a>
+                )}
                 {responseMsg.ok && <p className="mt-2 text-xs text-green-700">{responseMsg.ok}</p>}
                 {responseMsg.err && <p className="mt-2 text-xs text-red-700">{responseMsg.err}</p>}
               </div>
