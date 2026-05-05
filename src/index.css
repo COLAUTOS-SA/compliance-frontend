@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globales mínimos */
+:root {
+  /* color-scheme: light dark; */
+}
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+/* Ocultar scrollbar en contenedores horizontales */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+.bg-login{
+  background-image: url("/public/fondo1.jpg");
+  background-size: cover;
+  background-position: center;
+  backdrop-filter: blur(50000px);
+}
