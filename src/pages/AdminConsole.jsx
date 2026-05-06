@@ -76,6 +76,11 @@ const formatDate = (iso) => {
   return d.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" });
 };
 
+const fileNameFromPath = (value, fallback = "archivo") => {
+  const name = String(value || "").split(/[\\/]/).pop();
+  return name || fallback;
+};
+
 // Mapea clave del select al texto de la BD
 function mapTypeKeyToNombreBD(typeKey) {
   switch (typeKey) {
@@ -841,7 +846,7 @@ export default function AdminConsole() {
                 </div>
                 {openRow.archivoRespuestaUrl && (
                   <a
-                    href={`${API_URL}/files/download?path=${encodeURIComponent(openRow.archivoRespuestaUrl)}&name=respuesta-oficial`}
+                    href={`${API_URL}/files/download?path=${encodeURIComponent(openRow.archivoRespuestaUrl)}&name=${encodeURIComponent(fileNameFromPath(openRow.archivoRespuestaUrl, "respuesta-oficial"))}`}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-2 inline-block text-xs font-medium text-indigo-700 underline"
