@@ -744,60 +744,63 @@ export default function AdminConsole() {
 
       {/* Modal */}
       {openRow && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-[90vw] max-w-6xl h-[85vh] flex flex-col overflow-hidden">
-            <div className="px-6 py-2 bg-whiteborder-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+        <div className="fixed left-0 top-0 right-0 bottom-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="flex h-[92vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-white/20">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-950 px-6 py-5 text-white">
+              <div className="min-w-0">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
                   📄 Documentos de {openRow.nombre}
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="mt-2 text-sm text-slate-300">
                   Cada archivo se aprueba/rechaza y se registra concepto
                   individual.
                 </p>
               </div>
               <button
                 onClick={() => setOpenRowId(null)}
-                className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-sm font-semibold text-white hover:bg-white/20"
               >
                 X
               </button>
             </div>
 
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_260px]">
                 {/* EMAIL */}
-                <div className="flex items-start gap-3">
-                  <div className="bg-blue-100 text-blue-700 rounded-xl p-2 text-sm">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                  <div className="bg-cyan-50 text-cyan-700 rounded-xl p-2 text-sm">
                     <FiMail />
                   </div>
                   <div>
                     <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
                       Correo electrónico
                     </p>
-                    <p className="text-sm text-gray-800 font-medium break-all">
+                    <p className="text-sm text-slate-900 font-medium break-all">
                       {openRow.email}
                     </p>
+                  </div>
                   </div>
                 </div>
 
                 {/* DOCUMENTO */}
-                <div className="flex items-start gap-3">
-                  <div className="bg-purple-100 text-purple-700 rounded-xl p-2 text-sm">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                  <div className="bg-violet-50 text-violet-700 rounded-xl p-2 text-sm">
                     <FiUser />
                   </div>
                   <div>
                     <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
                       Documento
                     </p>
-                    <p className="text-sm text-gray-800 font-medium">
+                    <p className="text-sm text-slate-900 font-medium">
                       {openRow.tipoDocumento} {openRow.numeroDocumento}
                     </p>
                   </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-4">
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
                   Estado de la solicitud
                 </p>
@@ -805,25 +808,25 @@ export default function AdminConsole() {
                   <select
                     value={solicitudStatusEdit}
                     onChange={(e) => setSolicitudStatusEdit(e.target.value)}
-                    className="border rounded-lg px-3 py-2 text-sm bg-white"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white shadow-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                   >
                     <option value="pendiente">Pendiente</option>
                     <option value="aprobado">Aprobado</option>
                     <option value="rechazado">Rechazado</option>
                   </select>
-                  <StatusBadge value={solicitudStatusEdit} />
                 </div>
               </div>
+              </div>
 
-              <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+              <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
                 <p className="text-xs font-semibold text-indigo-900 uppercase tracking-wide">
                   Archivo de respuesta (solo Oficial de Cumplimiento)
                 </p>
                 <p className="mt-1 text-xs text-indigo-700">
                   Carga aquí documentación externa de soporte para esta solicitud.
                 </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-indigo-400 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-indigo-300 bg-white px-3 py-2 text-xs font-semibold text-indigo-800 shadow-sm hover:bg-indigo-100">
                     <FiUpload />
                     Seleccionar archivo
                     <input
@@ -839,7 +842,7 @@ export default function AdminConsole() {
                     type="button"
                     onClick={uploadResponseDocument}
                     disabled={!responseFile || uploadingResponse}
-                    className="rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-indigo-700 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {uploadingResponse ? "Cargando..." : "Guardar archivo de respuesta"}
                   </button>
@@ -859,13 +862,13 @@ export default function AdminConsole() {
               </div>
             </div>
 
-            <div className="px-6 py-5 overflow-y-auto flex-1 bg-gray-50">
+            <div className="px-6 py-5 overflow-y-auto flex-1 bg-slate-100">
               {docsInModal.length === 0 ? (
                 <p className="text-sm text-gray-500">
                   No hay archivos registrados.
                 </p>
               ) : (
-                <div className="w-full mx-auto grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="w-full mx-auto grid lg:grid-cols-2 2xl:grid-cols-3 gap-4">
                   {docsInModal.map((doc) => {
                     const archivoId = Number(doc.id);
                     const cell = grid[archivoId] || {
@@ -877,12 +880,12 @@ export default function AdminConsole() {
                     return (
                       <div
                         key={doc.id}
-                        className="bg-white border border-gray-200 rounded-2xl px-5 py-2 shadow-sm hover:shadow-lg transition space-y-4"
+                        className="flex min-h-[310px] flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg"
                       >
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-1 flex-col gap-4 px-4 py-4">
                           {/* HEADER */}
                           <div className="flex justify-between items-start gap-4">
-                            <h2 className="text-sm font-semibold text-gray-900 leading-snug max-w-[70%]">
+                            <h2 className="text-sm font-semibold text-slate-950 leading-snug max-w-[70%]">
                               {(doc.tipo_documento ?? "DOCUMENTO").toString()}
                             </h2>
 
@@ -897,7 +900,7 @@ export default function AdminConsole() {
                           </div>
 
                           {/* NOMBRE ARCHIVO */}
-                          <p className="text-xs text-gray-500 break-words">
+                          <p className="text-xs text-slate-500 break-words">
                             {doc.nombre_archivo}
                           </p>
 
@@ -906,7 +909,7 @@ export default function AdminConsole() {
                             href={`${API_URL}/files/download?path=${encodeURIComponent(doc.ruta_archivo)}&name=${doc.nombre_archivo}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-xs font-medium text-blue-600 hover:text-blue-800 w-fit"
+                            className="inline-flex w-fit items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
                           >
                             📎 Ver / Descargar
                           </a>
@@ -914,7 +917,7 @@ export default function AdminConsole() {
                           {/* ESTADO */}
                           <div className="flex items-center gap-2">
                             <select
-                              className="border rounded-lg px-2 py-1 text-xs bg-white focus:ring-2 focus:ring-primary-200"
+                              className="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white shadow-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                               value={cell.status || "pendiente"}
                               onChange={(e) =>
                                 updateArchivoCell(archivoId, {
@@ -932,12 +935,12 @@ export default function AdminConsole() {
 
                           {/* CONCEPTO */}
                           <div className="flex flex-col gap-1">
-                            <label className="text-[11px] font-semibold text-gray-600">
+                            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                               Concepto
                             </label>
 
                             <textarea
-                              className="w-full min-h-[90px] border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-primary-200 resize-none"
+                              className="w-full min-h-[120px] border border-slate-300 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-100 resize-none"
                               placeholder="Escribe observaciones claras sobre este documento..."
                               value={cell.concepto ?? ""}
                               onChange={(e) =>
@@ -955,7 +958,7 @@ export default function AdminConsole() {
               )}
             </div>
 
-            <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs">
                 {modalMsg.ok && (
                   <span className="text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg">
@@ -972,14 +975,14 @@ export default function AdminConsole() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setOpenRowId(null)}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50"
+                    className="text-sm px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
                   Cerrar
                 </button>
                 <button
                   onClick={saveModal}
                   disabled={savingModal}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-medium px-4 py-1.5 rounded-xl"
+                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-2 rounded-lg shadow-sm"
                 >
                   {savingModal ? "Guardando..." : "Guardar cambios"}
                 </button>
