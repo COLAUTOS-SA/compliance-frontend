@@ -11,10 +11,14 @@ import {
   FiChevronUp,
   FiClock,
   FiFileText,
+  FiLock,
   FiMail,
+  FiPlus,
+  FiRefreshCw,
   FiSearch,
   FiUpload,
   FiUser,
+  FiUsers,
   FiXCircle,
 } from "react-icons/fi";
 
@@ -141,6 +145,7 @@ export default function AdminConsole() {
   const isAdmin = user?.role === "admin";
   const redirectToLogin = !user;
   const showRestricted = user && !isAdmin;
+  const [activePanel, setActivePanel] = useState("solicitudes");
 
   // ----- filtros
   const [type, setType] = useState(COUNTERPART_TYPES[0].key);
@@ -156,6 +161,19 @@ export default function AdminConsole() {
   const [archivosAll, setArchivosAll] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersMsg, setUsersMsg] = useState({ ok: "", err: "" });
+  const [userSearch, setUserSearch] = useState("");
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [userForm, setUserForm] = useState({
+    nombre: "",
+    correo: "",
+    id_rol: "",
+    contrasena: "",
+  });
+  const [passwordDrafts, setPasswordDrafts] = useState({});
 
   // buscador + paginación
   const [search, setSearch] = useState("");
@@ -285,6 +303,39 @@ export default function AdminConsole() {
     load();
   }, [isAdmin, segment, segments, type]);
 
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (!isAdmin || activePanel !== "usuarios") return;
+
+      setUsersLoading(true);
+      setUsersMsg({ ok: "", err: "" });
+
+      try {
+        const [usuariosJson, rolesJson] = await Promise.all([
+          fetchJson(`${API_URL}/usuarios`),
+          fetchJson(`${API_URL}/roles`),
+        ]);
+
+        const nextRoles = rolesJson.data || [];
+        setUsuarios(usuariosJson.data || []);
+        setRoles(nextRoles);
+        setUserForm((current) => ({
+          ...current,
+          id_rol: current.id_rol || String(nextRoles[0]?.id || ""),
+        }));
+      } catch (e) {
+        setUsersMsg({
+          ok: "",
+          err: e.message || "No se pudieron cargar los usuarios",
+        });
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, [activePanel, isAdmin]);
+
   // openRow
   const openRow = useMemo(
     () => rows.find((r) => r.id === openRowId) || null,
@@ -334,6 +385,16 @@ export default function AdminConsole() {
       (r) => r.solicitudStatus === statusFilter,
     );
   }, [rowsWithComputedStatus, statusFilter]);
+
+  const filteredUsuarios = useMemo(() => {
+    const term = userSearch.trim().toLowerCase();
+    if (!term) return usuarios;
+    return usuarios.filter((u) =>
+      [u.nombre, u.correo, u.nombre_rol]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term)),
+    );
+  }, [userSearch, usuarios]);
 
   const sortedRows = useMemo(() => {
     const factor = sortDir === "asc" ? 1 : -1;
@@ -401,6 +462,121 @@ export default function AdminConsole() {
         },
       };
     });
+  };
+
+  const reloadUsers = async () => {
+    const [usuariosJson, rolesJson] = await Promise.all([
+      fetchJson(`${API_URL}/usuarios`),
+      fetchJson(`${API_URL}/roles`),
+    ]);
+    setUsuarios(usuariosJson.data || []);
+    setRoles(rolesJson.data || []);
+  };
+
+  const resetUserForm = () => {
+    setEditingUserId(null);
+    setUserForm({
+      nombre: "",
+      correo: "",
+      id_rol: String(roles[0]?.id || ""),
+      contrasena: "",
+    });
+  };
+
+  const editUser = (usuario) => {
+    setEditingUserId(usuario.id);
+    setUserForm({
+      nombre: usuario.nombre || "",
+      correo: usuario.correo || "",
+      id_rol: String(usuario.id_rol || ""),
+      contrasena: "",
+    });
+  };
+
+  const saveUser = async (event) => {
+    event.preventDefault();
+    setUsersMsg({ ok: "", err: "" });
+
+    try {
+      if (!userForm.nombre || !userForm.correo || !userForm.id_rol) {
+        throw new Error("Completa nombre, correo y rol");
+      }
+
+      if (!editingUserId && String(userForm.contrasena).length < 8) {
+        throw new Error("La contrasena inicial debe tener al menos 8 caracteres");
+      }
+
+      const payload = {
+        nombre: userForm.nombre.trim(),
+        correo: userForm.correo.trim(),
+        id_rol: Number(userForm.id_rol),
+      };
+
+      await fetchJson(
+        editingUserId
+          ? `${API_URL}/usuarios/${editingUserId}`
+          : `${API_URL}/usuarios`,
+        {
+          method: editingUserId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            editingUserId
+              ? payload
+              : { ...payload, contrasena: userForm.contrasena },
+          ),
+        },
+      );
+
+      await reloadUsers();
+      resetUserForm();
+      setUsersMsg({
+        ok: editingUserId ? "Usuario actualizado." : "Usuario creado.",
+        err: "",
+      });
+    } catch (e) {
+      setUsersMsg({ ok: "", err: e.message || "No se pudo guardar usuario" });
+    }
+  };
+
+  const toggleUserStatus = async (usuario) => {
+    setUsersMsg({ ok: "", err: "" });
+    try {
+      const nextActive = Number(usuario.activo ?? 1) !== 1;
+      await fetchJson(`${API_URL}/usuarios/${usuario.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activo: nextActive }),
+      });
+      await reloadUsers();
+      setUsersMsg({
+        ok: nextActive ? "Usuario habilitado." : "Usuario deshabilitado.",
+        err: "",
+      });
+    } catch (e) {
+      setUsersMsg({ ok: "", err: e.message || "No se pudo cambiar estado" });
+    }
+  };
+
+  const changeUserPassword = async (usuario) => {
+    const contrasena = passwordDrafts[usuario.id] || "";
+    setUsersMsg({ ok: "", err: "" });
+
+    try {
+      if (contrasena.length < 8) {
+        throw new Error("La nueva contrasena debe tener al menos 8 caracteres");
+      }
+
+      await fetchJson(`${API_URL}/usuarios/${usuario.id}/password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contrasena }),
+      });
+
+      setPasswordDrafts((current) => ({ ...current, [usuario.id]: "" }));
+      setUsersMsg({ ok: "Contrasena actualizada.", err: "" });
+    } catch (e) {
+      setUsersMsg({ ok: "", err: e.message || "No se pudo cambiar contrasena" });
+    }
   };
 
   // Guardar SOLO los archivos del modal
@@ -533,7 +709,7 @@ export default function AdminConsole() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-4">
+    <div className="max-w-7xl mx-auto p-6">
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
         {/* Header + filtros + buscador */}
         <div className="px-6 py-4 border-b border-gray-100 space-y-4">
@@ -541,11 +717,38 @@ export default function AdminConsole() {
             <div>
               <h2 className="text-lg font-semibold">Panel de aprobación</h2>
               <p className="text-sm text-gray-500">
-                Gestiona solicitudes, revisa soportes y registra conceptos por
-                archivo.
+                Gestiona solicitudes, usuarios y permisos operativos.
               </p>
             </div>
 
+            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1 text-sm">
+              <button
+                type="button"
+                onClick={() => setActivePanel("solicitudes")}
+                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 font-medium ${
+                  activePanel === "solicitudes"
+                    ? "bg-white text-primary-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <FiFileText />
+                Solicitudes
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePanel("usuarios")}
+                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 font-medium ${
+                  activePanel === "usuarios"
+                    ? "bg-white text-primary-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <FiUsers />
+                Usuarios
+              </button>
+            </div>
+
+            {activePanel === "solicitudes" && (
             <div className="w-full md:w-64 relative">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -556,8 +759,10 @@ export default function AdminConsole() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            )}
           </div>
 
+          {activePanel === "solicitudes" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full md:w-auto">
             <div className="flex flex-col">
               <span className="text-xs font-medium text-gray-600 mb-1">
@@ -609,9 +814,212 @@ export default function AdminConsole() {
               </select>
             </div>
           </div>
+          )}
         </div>
 
+        {activePanel === "usuarios" && (
+          <div className="grid gap-4 bg-slate-50 p-4 lg:grid-cols-[360px_1fr]">
+            <form
+              onSubmit={saveUser}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-700">
+                    Usuarios
+                  </p>
+                  <h3 className="text-base font-semibold text-slate-950">
+                    {editingUserId ? "Editar usuario" : "Nuevo usuario"}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetUserForm}
+                  className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Limpiar
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Nombre</span>
+                  <input
+                    value={userForm.nombre}
+                    onChange={(e) =>
+                      setUserForm((current) => ({ ...current, nombre: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Correo</span>
+                  <input
+                    type="email"
+                    value={userForm.correo}
+                    onChange={(e) =>
+                      setUserForm((current) => ({ ...current, correo: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Rol</span>
+                  <select
+                    value={userForm.id_rol}
+                    onChange={(e) =>
+                      setUserForm((current) => ({ ...current, id_rol: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                  >
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.nombre_rol}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {!editingUserId && (
+                  <label className="block">
+                    <span className="text-xs font-medium text-slate-600">
+                      Contraseña inicial
+                    </span>
+                    <input
+                      type="password"
+                      value={userForm.contrasena}
+                      onChange={(e) =>
+                        setUserForm((current) => ({ ...current, contrasena: e.target.value }))
+                      }
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    />
+                  </label>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700"
+              >
+                <FiPlus />
+                {editingUserId ? "Guardar cambios" : "Crear usuario"}
+              </button>
+              {usersMsg.ok && <p className="mt-3 text-xs text-green-700">{usersMsg.ok}</p>}
+              {usersMsg.err && <p className="mt-3 text-xs text-red-700">{usersMsg.err}</p>}
+            </form>
+
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-950">
+                    Directorio de usuarios
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Edita datos, deshabilita accesos o cambia contraseñas.
+                  </p>
+                </div>
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Buscar usuario..."
+                    className="w-full rounded-xl border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:w-64"
+                  />
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {usersLoading ? (
+                  <p className="p-6 text-center text-sm text-slate-500">
+                    Cargando usuarios...
+                  </p>
+                ) : filteredUsuarios.length === 0 ? (
+                  <p className="p-6 text-center text-sm text-slate-500">
+                    No hay usuarios para mostrar.
+                  </p>
+                ) : (
+                  filteredUsuarios.map((usuario) => {
+                    const active = Number(usuario.activo ?? 1) === 1;
+                    return (
+                      <div key={usuario.id} className="grid gap-3 p-4 xl:grid-cols-[1fr_280px]">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                            active ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            <FiUser />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-slate-950">{usuario.nombre}</p>
+                              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                active ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-600"
+                              }`}>
+                                {active ? "Activo" : "Deshabilitado"}
+                              </span>
+                            </div>
+                            <p className="break-all text-sm text-slate-600">{usuario.correo}</p>
+                            <p className="mt-1 text-xs font-medium text-primary-700">
+                              {usuario.nombre_rol}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="password"
+                              value={passwordDrafts[usuario.id] || ""}
+                              onChange={(e) =>
+                                setPasswordDrafts((current) => ({
+                                  ...current,
+                                  [usuario.id]: e.target.value,
+                                }))
+                              }
+                              placeholder="Nueva contraseña"
+                              className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-xs outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => changeUserPassword(usuario)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                            >
+                              <FiLock />
+                              Cambiar
+                            </button>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => editUser(usuario)}
+                              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => toggleUserStatus(usuario)}
+                              className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                                active
+                                  ? "bg-red-50 text-red-700 hover:bg-red-100"
+                                  : "bg-green-50 text-green-700 hover:bg-green-100"
+                              }`}
+                            >
+                              {active ? <FiXCircle /> : <FiCheckCircle />}
+                              {active ? "Deshabilitar" : "Habilitar"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tabla */}
+        {activePanel === "solicitudes" && (
         <div className="p-4 overflow-auto">
           {loading && (
             <div className="text-center py-6 text-gray-500 animate-pulse">
@@ -698,8 +1106,10 @@ export default function AdminConsole() {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Footer paginación */}
+        {activePanel === "solicitudes" && (
         <div className="px-6 py-4 border-t border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="text-xs text-gray-500">
             {sortedRows.length > 0 ? (
@@ -740,11 +1150,12 @@ export default function AdminConsole() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Modal */}
       {openRow && (
-        <div className="fixed left-0 top-0 right-0 bottom-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/75 p-4 backdrop-blur-sm">
+        <div className="fixed left-0 top-0 right-0 bottom-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-600/75 p-4 backdrop-blur-sm">
           <div className="flex h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-white/20">
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-3">
               <div className="min-w-0">
@@ -768,11 +1179,11 @@ export default function AdminConsole() {
                 {/* EMAIL */}
                 <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <div className="flex items-start gap-3">
-                  <div className="bg-cyan-50 text-cyan-700 rounded-lg p-1.5 text-sm">
+                  <div className="bg-cyan-50 my-auto text-cyan-700 rounded-lg p-1.5 text-sm">
                     <FiMail />
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+                    <p className="text-[11px] uppercase tracking-wide mb-4 text-gray-400 font-semibold">
                       Correo electrónico
                     </p>
                     <p className="text-sm text-slate-900 font-medium break-all">
@@ -785,11 +1196,11 @@ export default function AdminConsole() {
                 {/* DOCUMENTO */}
                 <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <div className="flex items-start gap-3">
-                  <div className="bg-violet-50 text-violet-700 rounded-lg p-1.5 text-sm">
+                  <div className="bg-violet-50 my-auto text-violet-700 rounded-lg p-1.5 text-sm">
                     <FiUser />
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+                    <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-4 font-semibold">
                       Documento
                     </p>
                     <p className="text-sm text-slate-900 font-medium">
@@ -818,7 +1229,7 @@ export default function AdminConsole() {
               </div>
 
               <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
-                <p className="text-xs font-semibold text-indigo-900 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-slate-900 uppercase tracking-wide">
                   Archivo de respuesta (solo Oficial de Cumplimiento)
                 </p>
                 <p className="hidden">
@@ -851,7 +1262,7 @@ export default function AdminConsole() {
                     href={`${API_URL}/files/download?path=${encodeURIComponent(openRow.archivoRespuestaUrl)}&name=${encodeURIComponent(fileNameFromPath(openRow.archivoRespuestaUrl, "respuesta-oficial"))}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-1.5 inline-block text-xs font-medium text-indigo-700 underline"
+                    className="mt-1.5 inline-block text-xs font-medium text-green-700 underline"
                   >
                     Ver respuesta actual
                   </a>
