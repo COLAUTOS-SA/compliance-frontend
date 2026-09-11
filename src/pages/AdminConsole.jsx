@@ -24,10 +24,9 @@ import {
 
 // URL base del backend
 const RAW_API = import.meta.env.VITE_API_URL;
-const API_URL =
-  RAW_API
-    ? RAW_API.replace(/\/$/, "")
-    : "https://compliance.colautos.co/api";
+const API_URL = RAW_API
+  ? RAW_API.replace(/\/$/, "")
+  : "https://compliance.colautos.co/api";
 
 /**
  * IMPORTANTE:
@@ -81,7 +80,9 @@ const formatDate = (iso) => {
 };
 
 const fileNameFromPath = (value, fallback = "archivo") => {
-  const name = String(value || "").split(/[\\/]/).pop();
+  const name = String(value || "")
+    .split(/[\\/]/)
+    .pop();
   return name || fallback;
 };
 
@@ -254,6 +255,7 @@ export default function AdminConsole() {
               tipoDocumento: c.Tipo_doc,
               numeroDocumento: c.Nro_doc,
               firmadoUrl: sol.conocimiento_contrapartes,
+              tratamientoDatosUrl: sol.tratamiento_datos,
               archivoRespuestaUrl: sol.archivo_respuesta_ruta,
               fecha_actual: sol.fecha_actual,
               fecha_ult_actualizacion: sol.fecha_ult_actualizacion,
@@ -366,7 +368,11 @@ export default function AdminConsole() {
       const nameStr = (r.nombre ?? "").toString().toLowerCase();
       const docStr = (r.numeroDocumento ?? "").toString().toLowerCase();
       const emailStr = (r.email ?? "").toString().toLowerCase();
-      return nameStr.includes(term) || docStr.includes(term) || emailStr.includes(term);
+      return (
+        nameStr.includes(term) ||
+        docStr.includes(term) ||
+        emailStr.includes(term)
+      );
     });
   }, [rows, search]);
 
@@ -401,13 +407,22 @@ export default function AdminConsole() {
     const copy = [...statusFilteredRows];
     copy.sort((a, b) => {
       if (sortBy === "nombre") {
-        return a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" }) * factor;
+        return (
+          a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" }) *
+          factor
+        );
       }
       if (sortBy === "documento") {
-        return String(a.numeroDocumento).localeCompare(String(b.numeroDocumento), "es", {
-          numeric: true,
-          sensitivity: "base",
-        }) * factor;
+        return (
+          String(a.numeroDocumento).localeCompare(
+            String(b.numeroDocumento),
+            "es",
+            {
+              numeric: true,
+              sensitivity: "base",
+            },
+          ) * factor
+        );
       }
       if (sortBy === "estado") {
         return (
@@ -420,8 +435,12 @@ export default function AdminConsole() {
           ) * factor
         );
       }
-      const aDate = new Date(a.fecha_ult_actualizacion || a.fecha_actual || 0).getTime();
-      const bDate = new Date(b.fecha_ult_actualizacion || b.fecha_actual || 0).getTime();
+      const aDate = new Date(
+        a.fecha_ult_actualizacion || a.fecha_actual || 0,
+      ).getTime();
+      const bDate = new Date(
+        b.fecha_ult_actualizacion || b.fecha_actual || 0,
+      ).getTime();
       return (aDate - bDate) * factor;
     });
     return copy;
@@ -430,17 +449,13 @@ export default function AdminConsole() {
   useEffect(() => setPage(1), [search, statusFilter, sortBy, sortDir]);
 
   // paginación
-  const totalPages = Math.max(
-    1,
-    Math.ceil(sortedRows.length / PAGE_SIZE) || 1,
-  );
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE) || 1);
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * PAGE_SIZE;
   const pagedRows = sortedRows.slice(startIndex, startIndex + PAGE_SIZE);
 
   const showingFrom = sortedRows.length === 0 ? 0 : startIndex + 1;
-  const showingTo =
-    sortedRows.length === 0 ? 0 : startIndex + pagedRows.length;
+  const showingTo = sortedRows.length === 0 ? 0 : startIndex + pagedRows.length;
 
   const onSort = (column) => {
     if (sortBy === column) {
@@ -503,7 +518,9 @@ export default function AdminConsole() {
       }
 
       if (!editingUserId && String(userForm.contrasena).length < 8) {
-        throw new Error("La contrasena inicial debe tener al menos 8 caracteres");
+        throw new Error(
+          "La contrasena inicial debe tener al menos 8 caracteres",
+        );
       }
 
       const payload = {
@@ -575,7 +592,10 @@ export default function AdminConsole() {
       setPasswordDrafts((current) => ({ ...current, [usuario.id]: "" }));
       setUsersMsg({ ok: "Contrasena actualizada.", err: "" });
     } catch (e) {
-      setUsersMsg({ ok: "", err: e.message || "No se pudo cambiar contrasena" });
+      setUsersMsg({
+        ok: "",
+        err: e.message || "No se pudo cambiar contrasena",
+      });
     }
   };
 
@@ -670,7 +690,9 @@ export default function AdminConsole() {
       );
       const json = await resp.json();
       if (!resp.ok || json?.success === false) {
-        throw new Error(json?.message || "No se pudo cargar archivo de respuesta");
+        throw new Error(
+          json?.message || "No se pudo cargar archivo de respuesta",
+        );
       }
 
       const archJson = await fetchJson(`${API_URL}/archivos`);
@@ -683,9 +705,15 @@ export default function AdminConsole() {
         ),
       );
       setResponseFile(null);
-      setResponseMsg({ ok: "Archivo de respuesta cargado correctamente.", err: "" });
+      setResponseMsg({
+        ok: "Archivo de respuesta cargado correctamente.",
+        err: "",
+      });
     } catch (e) {
-      setResponseMsg({ ok: "", err: e.message || "No se pudo registrar el archivo de respuesta." });
+      setResponseMsg({
+        ok: "",
+        err: e.message || "No se pudo registrar el archivo de respuesta.",
+      });
     } finally {
       setUploadingResponse(false);
     }
@@ -749,71 +777,73 @@ export default function AdminConsole() {
             </div>
 
             {activePanel === "solicitudes" && (
-            <div className="w-full md:w-64 relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                className="w-full pl-9 pr-3 py-2 border rounded-xl text-sm shadow-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none"
-                placeholder="Buscar por nombre o N° documento…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+              <div className="w-full md:w-64 relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  autoComplete="off"
+                  name="admin-search"
+                  className="w-full pl-9 pr-3 py-2 border rounded-xl text-sm shadow-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none"
+                  placeholder="Buscar por nombre, correo o documento..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
             )}
           </div>
 
           {activePanel === "solicitudes" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full md:w-auto">
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-gray-600 mb-1">
-                Tipo de contraparte
-              </span>
-              <select
-                className="border rounded-xl px-3 py-2 bg-white text-sm"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-              >
-                {COUNTERPART_TYPES.map((t) => (
-                  <option key={t.key} value={t.key}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full md:w-auto">
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-gray-600 mb-1">
+                  Tipo de contraparte
+                </span>
+                <select
+                  className="border rounded-xl px-3 py-2 bg-white text-sm"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                >
+                  {COUNTERPART_TYPES.map((t) => (
+                    <option key={t.key} value={t.key}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-gray-600 mb-1">
-                Segmento
-              </span>
-              <select
-                className="border rounded-xl px-3 py-2 bg-white text-sm"
-                value={segment}
-                onChange={(e) => setSegment(e.target.value)}
-              >
-                {segments.map((s) => (
-                  <option key={s.slug} value={s.slug}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-gray-600 mb-1">
+                  Segmento
+                </span>
+                <select
+                  className="border rounded-xl px-3 py-2 bg-white text-sm"
+                  value={segment}
+                  onChange={(e) => setSegment(e.target.value)}
+                >
+                  {segments.map((s) => (
+                    <option key={s.slug} value={s.slug}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-gray-600 mb-1">
-                Estado de solicitud
-              </span>
-              <select
-                className="border rounded-xl px-3 py-2 bg-white text-sm"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="todos">Todos</option>
-                <option value="aprobado">Aprobado</option>
-                <option value="rechazado">Rechazado</option>
-                <option value="pendiente">Pendiente</option>
-              </select>
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-gray-600 mb-1">
+                  Estado de solicitud
+                </span>
+                <select
+                  className="border rounded-xl px-3 py-2 bg-white text-sm"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="todos">Todos</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="rechazado">Rechazado</option>
+                  <option value="pendiente">Pendiente</option>
+                </select>
+              </div>
             </div>
-          </div>
           )}
         </div>
 
@@ -843,32 +873,47 @@ export default function AdminConsole() {
 
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Nombre</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Nombre
+                  </span>
                   <input
                     value={userForm.nombre}
                     onChange={(e) =>
-                      setUserForm((current) => ({ ...current, nombre: e.target.value }))
+                      setUserForm((current) => ({
+                        ...current,
+                        nombre: e.target.value,
+                      }))
                     }
                     className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Correo</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Correo
+                  </span>
                   <input
                     type="email"
                     value={userForm.correo}
                     onChange={(e) =>
-                      setUserForm((current) => ({ ...current, correo: e.target.value }))
+                      setUserForm((current) => ({
+                        ...current,
+                        correo: e.target.value,
+                      }))
                     }
                     className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Rol</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Rol
+                  </span>
                   <select
                     value={userForm.id_rol}
                     onChange={(e) =>
-                      setUserForm((current) => ({ ...current, id_rol: e.target.value }))
+                      setUserForm((current) => ({
+                        ...current,
+                        id_rol: e.target.value,
+                      }))
                     }
                     className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                   >
@@ -888,7 +933,10 @@ export default function AdminConsole() {
                       type="password"
                       value={userForm.contrasena}
                       onChange={(e) =>
-                        setUserForm((current) => ({ ...current, contrasena: e.target.value }))
+                        setUserForm((current) => ({
+                          ...current,
+                          contrasena: e.target.value,
+                        }))
                       }
                       className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                     />
@@ -903,8 +951,12 @@ export default function AdminConsole() {
                 <FiPlus />
                 {editingUserId ? "Guardar cambios" : "Crear usuario"}
               </button>
-              {usersMsg.ok && <p className="mt-3 text-xs text-green-700">{usersMsg.ok}</p>}
-              {usersMsg.err && <p className="mt-3 text-xs text-red-700">{usersMsg.err}</p>}
+              {usersMsg.ok && (
+                <p className="mt-3 text-xs text-green-700">{usersMsg.ok}</p>
+              )}
+              {usersMsg.err && (
+                <p className="mt-3 text-xs text-red-700">{usersMsg.err}</p>
+              )}
             </form>
 
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -920,6 +972,8 @@ export default function AdminConsole() {
                 <div className="relative">
                   <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
+                    type="text"
+                    autoComplete="off"
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     placeholder="Buscar usuario..."
@@ -941,23 +995,38 @@ export default function AdminConsole() {
                   filteredUsuarios.map((usuario) => {
                     const active = Number(usuario.activo ?? 1) === 1;
                     return (
-                      <div key={usuario.id} className="grid gap-3 p-4 xl:grid-cols-[1fr_280px]">
+                      <div
+                        key={usuario.id}
+                        className="grid gap-3 p-4 xl:grid-cols-[1fr_280px]"
+                      >
                         <div className="flex min-w-0 items-start gap-3">
-                          <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                            active ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"
-                          }`}>
+                          <span
+                            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                              active
+                                ? "bg-green-50 text-green-700"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
                             <FiUser />
                           </span>
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-slate-950">{usuario.nombre}</p>
-                              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                active ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-600"
-                              }`}>
+                              <p className="font-semibold text-slate-950">
+                                {usuario.nombre}
+                              </p>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                  active
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-slate-200 text-slate-600"
+                                }`}
+                              >
                                 {active ? "Activo" : "Deshabilitado"}
                               </span>
                             </div>
-                            <p className="break-all text-sm text-slate-600">{usuario.correo}</p>
+                            <p className="break-all text-sm text-slate-600">
+                              {usuario.correo}
+                            </p>
                             <p className="mt-1 text-xs font-medium text-primary-700">
                               {usuario.nombre_rol}
                             </p>
@@ -1020,136 +1089,185 @@ export default function AdminConsole() {
 
         {/* Tabla */}
         {activePanel === "solicitudes" && (
-        <div className="p-4 overflow-auto">
-          {loading && (
-            <div className="text-center py-6 text-gray-500 animate-pulse">
-              ⏳ Cargando solicitudes...
-            </div>
-          )}
-          {error && <p className="text-xs text-red-600 px-3 pb-2">{error}</p>}
+          <div className="p-4 overflow-auto">
+            {loading && (
+              <div className="text-center py-6 text-gray-500 animate-pulse">
+                ⏳ Cargando solicitudes...
+              </div>
+            )}
+            {error && <p className="text-xs text-red-600 px-3 pb-2">{error}</p>}
 
-          <table className="min-w-full border-separate border-spacing-0 overflow-hidden rounded-xl border border-gray-200 bg-white text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-600">
-                <th className="px-3 py-3 text-center">
-                  <button type="button" onClick={() => onSort("nombre")} className="inline-flex items-center gap-1 font-semibold">
-                    Nombre {sortBy === "nombre" && (sortDir === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-                  </button>
-                </th>
-                <th className="px-3 py-3 text-center">Correo</th>
-                <th className="px-3 py-3 text-center">
-                  <button type="button" onClick={() => onSort("documento")} className="inline-flex items-center gap-1 font-semibold">
-                    Documento {sortBy === "documento" && (sortDir === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-                  </button>
-                </th>
-                <th className="px-3 py-3 text-center">
-                  <button type="button" onClick={() => onSort("estado")} className="inline-flex items-center gap-1 font-semibold">
-                    Estado {sortBy === "estado" && (sortDir === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-                  </button>
-                </th>
-                <th className="px-3 py-3 text-center">
-                  <button type="button" onClick={() => onSort("fecha_ult_actualizacion")} className="inline-flex items-center gap-1 font-semibold">
-                    Última actualización {sortBy === "fecha_ult_actualizacion" && (sortDir === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-                  </button>
-                </th>
-                <th className="px-3 py-3 text-center ">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedRows.length === 0 && !loading ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-gray-500">
-                    No hay solicitudes para los filtros aplicados.
-                  </td>
+            <table className="min-w-full border-separate border-spacing-0 overflow-hidden rounded-xl border border-gray-200 bg-white text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-600">
+                  <th className="px-3 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => onSort("nombre")}
+                      className="inline-flex items-center gap-1 font-semibold"
+                    >
+                      Nombre{" "}
+                      {sortBy === "nombre" &&
+                        (sortDir === "asc" ? (
+                          <FiChevronUp />
+                        ) : (
+                          <FiChevronDown />
+                        ))}
+                    </button>
+                  </th>
+                  <th className="px-3 py-3 text-center">Correo</th>
+                  <th className="px-3 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => onSort("documento")}
+                      className="inline-flex items-center gap-1 font-semibold"
+                    >
+                      Documento{" "}
+                      {sortBy === "documento" &&
+                        (sortDir === "asc" ? (
+                          <FiChevronUp />
+                        ) : (
+                          <FiChevronDown />
+                        ))}
+                    </button>
+                  </th>
+                  <th className="px-3 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => onSort("estado")}
+                      className="inline-flex items-center gap-1 font-semibold"
+                    >
+                      Estado{" "}
+                      {sortBy === "estado" &&
+                        (sortDir === "asc" ? (
+                          <FiChevronUp />
+                        ) : (
+                          <FiChevronDown />
+                        ))}
+                    </button>
+                  </th>
+                  <th className="px-3 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => onSort("fecha_ult_actualizacion")}
+                      className="inline-flex items-center gap-1 font-semibold"
+                    >
+                      Última actualización{" "}
+                      {sortBy === "fecha_ult_actualizacion" &&
+                        (sortDir === "asc" ? (
+                          <FiChevronUp />
+                        ) : (
+                          <FiChevronDown />
+                        ))}
+                    </button>
+                  </th>
+                  <th className="px-3 py-3 text-center ">Acciones</th>
                 </tr>
-              ) : (
-                pagedRows.map((r) => (
-                  <tr key={r.id} className="border-t border-gray-100">
-                    <td className="px-3 py-3 text-center font-medium text-gray-900">{r.nombre}</td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-600">{r.email}</td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-700">
-                      {r.tipoDocumento} - {r.numeroDocumento}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <StatusBadge value={r.solicitudStatus} />
-                    </td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-600">
-                      {formatDate(r.fecha_ult_actualizacion || r.fecha_actual)}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <div className="flex justify-end gap-2">
-                        {r.firmadoUrl && (
-                          <a
-                            href={`${API_URL}/files/download?path=${encodeURIComponent(r.firmadoUrl)}&name=formulario_${r.id}.pdf`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                          >
-                            Ver firmado
-                          </a>
-                        )}
-                        <button
-                          onClick={() => {
-                            setOpenRowId(r.id);
-                            setModalMsg({ ok: "", err: "" });
-                            setResponseMsg({ ok: "", err: "" });
-                          }}
-                          className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs hover:bg-gray-200"
-                        >
-                          Documentos
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                {pagedRows.length === 0 && !loading ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-3 py-6 text-center text-sm text-gray-500"
+                    >
+                      No hay solicitudes para los filtros aplicados.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  pagedRows.map((r) => (
+                    <tr key={r.id} className="border-t border-gray-100">
+                      <td className="px-3 py-3 text-center font-medium text-gray-900">
+                        {r.nombre}
+                      </td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-600">
+                        {r.email}
+                      </td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-700">
+                        {r.tipoDocumento} - {r.numeroDocumento}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <StatusBadge value={r.solicitudStatus} />
+                      </td>
+                      <td className="px-3 py-3 text-center text-xs text-gray-600">
+                        {formatDate(
+                          r.fecha_ult_actualizacion || r.fecha_actual,
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <div className="flex justify-end gap-2">
+                          {r.firmadoUrl && (
+                            <a
+                              href={`${API_URL}/files/download?path=${encodeURIComponent(r.firmadoUrl)}&name=formulario_${r.id}.pdf`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                            >
+                              Ver firmado
+                            </a>
+                          )}
+                          <button
+                            onClick={() => {
+                              setOpenRowId(r.id);
+                              setModalMsg({ ok: "", err: "" });
+                              setResponseMsg({ ok: "", err: "" });
+                            }}
+                            className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs hover:bg-gray-200"
+                          >
+                            Documentos
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {/* Footer paginación */}
         {activePanel === "solicitudes" && (
-        <div className="px-6 py-4 border-t border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="text-xs text-gray-500">
-            {sortedRows.length > 0 ? (
-              <>
-                Mostrando{" "}
-                <span className="font-semibold">
-                  {showingFrom}–{showingTo}
-                </span>{" "}
-                de <span className="font-semibold">{sortedRows.length}</span>.
-              </>
-            ) : (
-              <>Sin resultados.</>
+          <div className="px-6 py-4 border-t border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="text-xs text-gray-500">
+              {sortedRows.length > 0 ? (
+                <>
+                  Mostrando{" "}
+                  <span className="font-semibold">
+                    {showingFrom}–{showingTo}
+                  </span>{" "}
+                  de <span className="font-semibold">{sortedRows.length}</span>.
+                </>
+              ) : (
+                <>Sin resultados.</>
+              )}
+            </div>
+
+            {sortedRows.length > PAGE_SIZE && (
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  className="px-2 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Anterior
+                </button>
+                <span className="text-gray-600">
+                  Página <span className="font-semibold">{safePage}</span> de{" "}
+                  <span className="font-semibold">{totalPages}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  className="px-2 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Siguiente
+                </button>
+              </div>
             )}
           </div>
-
-          {sortedRows.length > PAGE_SIZE && (
-            <div className="flex items-center gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={safePage === 1}
-                className="px-2 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                Anterior
-              </button>
-              <span className="text-gray-600">
-                Página <span className="font-semibold">{safePage}</span> de{" "}
-                <span className="font-semibold">{totalPages}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={safePage === totalPages}
-                className="px-2 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                Siguiente
-              </button>
-            </div>
-          )}
-        </div>
         )}
       </div>
 
@@ -1179,61 +1297,120 @@ export default function AdminConsole() {
                 {/* EMAIL */}
                 <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <div className="flex items-start gap-3">
-                  <div className="bg-cyan-50 my-auto text-cyan-700 rounded-lg p-1.5 text-sm">
-                    <FiMail />
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide mb-4 text-gray-400 font-semibold">
-                      Correo electrónico
-                    </p>
-                    <p className="text-sm text-slate-900 font-medium break-all">
-                      {openRow.email}
-                    </p>
-                  </div>
+                    <div className="bg-cyan-50 my-auto text-cyan-700 rounded-lg p-1.5 text-sm">
+                      <FiMail />
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide mb-4 text-gray-400 font-semibold">
+                        Correo electrónico
+                      </p>
+                      <p className="text-sm text-slate-900 font-medium break-all">
+                        {openRow.email}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* DOCUMENTO */}
                 <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <div className="flex items-start gap-3">
-                  <div className="bg-violet-50 my-auto text-violet-700 rounded-lg p-1.5 text-sm">
-                    <FiUser />
+                    <div className="bg-violet-50 my-auto text-violet-700 rounded-lg p-1.5 text-sm">
+                      <FiUser />
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-4 font-semibold">
+                        Documento
+                      </p>
+                      <p className="text-sm text-slate-900 font-medium">
+                        {openRow.tipoDocumento} {openRow.numeroDocumento}
+                      </p>
+                    </div>
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+                    Estado de la solicitud
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <select
+                      value={solicitudStatusEdit}
+                      onChange={(e) => setSolicitudStatusEdit(e.target.value)}
+                      className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-sm bg-white shadow-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    >
+                      <option value="pendiente">Pendiente</option>
+                      <option value="aprobado">Aprobado</option>
+                      <option value="rechazado">Rechazado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              {/* FORMULARIOS FIRMADOS */}
+              <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-4 font-semibold">
-                      Documento
+                    <p className="text-[11px] uppercase tracking-wide font-semibold text-emerald-800">
+                      Formularios firmados
                     </p>
-                    <p className="text-sm text-slate-900 font-medium">
-                      {openRow.tipoDocumento} {openRow.numeroDocumento}
+                    <p className="mt-0.5 text-xs text-emerald-700">
+                      Documentos diligenciados y firmados por la contraparte.
                     </p>
                   </div>
-                  </div>
+
+                  <FiCheckCircle className="text-emerald-600 text-lg shrink-0" />
                 </div>
 
-              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
-                  Estado de la solicitud
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <select
-                    value={solicitudStatusEdit}
-                    onChange={(e) => setSolicitudStatusEdit(e.target.value)}
-                    className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-sm bg-white shadow-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                  >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="aprobado">Aprobado</option>
-                    <option value="rechazado">Rechazado</option>
-                  </select>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {/* Conocimiento de contrapartes */}
+                  {openRow.firmadoUrl ? (
+                    <a
+                      href={`${API_URL}/files/download?path=${encodeURIComponent(
+                        openRow.firmadoUrl,
+                      )}&name=${encodeURIComponent(
+                        `formulario_${openRow.id_solicitud}.pdf`,
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm hover:bg-blue-50"
+                    >
+                      <FiFileText />
+                      Ver formulario de vinculación
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-400">
+                      Formulario de vinculación no disponible
+                    </span>
+                  )}
+
+                  {/* Tratamiento de datos */}
+                  {openRow.tratamientoDatosUrl ? (
+                    <a
+                      href={`${API_URL}/files/download?path=${encodeURIComponent(
+                        openRow.tratamientoDatosUrl,
+                      )}&name=${encodeURIComponent(
+                        `tratamiento_datos_${openRow.id_solicitud}.pdf`,
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 shadow-sm hover:bg-violet-50"
+                    >
+                      <FiFileText />
+                      Ver tratamiento de datos
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-400">
+                      Tratamiento de datos no disponible
+                    </span>
+                  )}
                 </div>
               </div>
-              </div>
-
               <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
                 <p className="text-xs font-semibold text-slate-900 uppercase tracking-wide">
                   Archivo de respuesta (solo Oficial de Cumplimiento)
                 </p>
                 <p className="hidden">
-                  Carga aquí documentación externa de soporte para esta solicitud.
+                  Carga aquí documentación externa de soporte para esta
+                  solicitud.
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-indigo-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-indigo-800 shadow-sm hover:bg-indigo-100">
@@ -1242,11 +1419,15 @@ export default function AdminConsole() {
                     <input
                       type="file"
                       className="hidden"
-                      onChange={(e) => setResponseFile(e.target.files?.[0] || null)}
+                      onChange={(e) =>
+                        setResponseFile(e.target.files?.[0] || null)
+                      }
                     />
                   </label>
                   <span className="max-w-[260px] truncate text-xs text-indigo-700">
-                    {responseFile ? responseFile.name : "Ningún archivo seleccionado"}
+                    {responseFile
+                      ? responseFile.name
+                      : "Ningún archivo seleccionado"}
                   </span>
                   <button
                     type="button"
@@ -1267,8 +1448,14 @@ export default function AdminConsole() {
                     Ver respuesta actual
                   </a>
                 )}
-                {responseMsg.ok && <p className="mt-1 text-xs text-green-700">{responseMsg.ok}</p>}
-                {responseMsg.err && <p className="mt-1 text-xs text-red-700">{responseMsg.err}</p>}
+                {responseMsg.ok && (
+                  <p className="mt-1 text-xs text-green-700">
+                    {responseMsg.ok}
+                  </p>
+                )}
+                {responseMsg.err && (
+                  <p className="mt-1 text-xs text-red-700">{responseMsg.err}</p>
+                )}
               </div>
             </div>
 
@@ -1385,7 +1572,7 @@ export default function AdminConsole() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setOpenRowId(null)}
-                    className="text-sm px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50"
+                  className="text-sm px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
                   Cerrar
                 </button>

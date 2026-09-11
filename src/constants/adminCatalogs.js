@@ -83,9 +83,14 @@ export const SEGMENTS_BY_TYPE = {
 
   empleados: [
     {
-      slug: "todos-los-empleados",
-      label: "TODOS LOS EMPLEADOS",
+      slug: "empleados-nuevos",
+      label: "EMPLEADOS NUEVOS",
       segmentId: 14,
+    },
+    {
+      slug: "empleados-existentes",
+      label: "EMPLEADOS EXISTENTES",
+      segmentId: 15,
     },
   ],
 };
@@ -157,5 +162,6 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
   ],
 
   // EMPLEADOS
-  "todos-los-empleados": ["CC", "Hoja de Vida", "Certificado Antecedentes"],
+  "empleados-nuevos": ["CC", "Certificación Laboral/Ingresos"],
+  "empleados-existentes": [],
 };

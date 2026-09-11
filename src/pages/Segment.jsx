@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FiSave, FiUpload, FiLoader } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -7,11 +7,37 @@ import { REQUIRED_DOCS_BY_SEGMENT } from "../constants/requiredDocs.js";
 // import useAdobeSign from "../hooks/useAdobeSign";
 
 const TIPO_DOC = ["CC", "CE", "NIT", "PASAPORTE"];
+const TIPO_DOC_PROVEEDOR = ["NIT", "DOCUMENTO INTERNACIONAL"];
 const API_URL =
   import.meta.env.VITE_API_URL || "https://compliance.colautos.co/api";
+
+const TRATAMIENTO_DE_DATOS =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhD_wa9Gg5VwYoMZmea_jVlmlGdMxWi1t-BBKALWeAG7K2ZpruGv_H9nG4N0cJF1aAA*";
+
 const ADOBE_WEBFORM_URL =
   "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhBNNU1M0xpYcPOpctKOucZOVta7feMRFxxKjI-8TT5he7WaVBqGeSTLEfJF2maqerk*";
-const BENEFICIARIOS_DOC_OLD = "CUESTIONARIO VINCULACIÓN DE PROVEEDORES Y CONTRATISTAS";
+
+const ADOBE_WEBFORM_PROVEEDOR_NATURALES =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhCFSul092WmiD59xpCSf8qgeNK5icO5TmF-H_Q2iIBR7KXat_PsP2eFE96oPNvQaUs*";
+
+const ADOBE_WEBFORM_ACCIONISTA_JURIDICOS =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhDpQ5-O-lvpTChv4NZKDuWUaAIBMTHNwDCUJNtKHpuBQr5tzXmx8uXZBi2BfOf-KkE*";
+
+const ADOBE_WEBFORM_ACCIONISTA_NATURALES =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhC9l7rwEM_GaUASXb_0Sv3MQobxGGMhRi4JAT4NegMDoWsOSaiT-QAv3SVCyXOOvoU*";
+
+const ADOBE_WEBFORM_CLIENTES_JURIDICOS =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhCFSul092WmiD59xpCSf8qgeNK5icO5TmF-H_Q2iIBR7KXat_PsP2eFE96oPNvQaUs*";
+
+const ADOBE_WEBFORM_CLIENTES_NATURALES =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhBX3q7rycXPdyk6bT4BWAQWT2rMc7XfmzZs8UOmbnGl24LiS_6v7ZyfmeR9n0CoV0Q*";
+
+const ADOBE_WEBFORM_EMPLEADOS =
+  "https://secure.na4.adobesign.com/public/esignWidget?wid=CBFCIBAA3AAABLblqZhDcWbECHAEeRCMTVnyxZPAYUx03CNHRvsAFp6WFNhCg4ulDxwscRwA60XM7sf8kPC8*";
+
+const EMPLOYEE_SEGMENTS = new Set(["empleados-nuevos", "empleados-existentes"]);
+
+const BENEFICIARIOS_DOC_OLD = "LISTADO DE BENEFICIARIOS FINALES";
 const BENEFICIARIOS_DOC_NEW = "LISTADO DE BENEFICIARIOS FINALES";
 
 // Mapea el rol del usuario al id_tipo_contraparte de la BD
@@ -60,6 +86,8 @@ function mapSegmentSlugToSegmentId(segmento) {
 
     // EMPLEADOS
     "todos-los-empleados": 14,
+    "empleados-nuevos": 15,
+    "empleados-existentes": 16,
   };
 
   return SEGMENT_ID_BY_SLUG[segmento] ?? null;
@@ -84,6 +112,39 @@ function nowForMySQL() {
   );
 }
 
+function getAdobeFormUrl(role, tipoPersona) {
+  const tipo = (tipoPersona || "natural").toLowerCase();
+
+  // 🔹 EMPLEADOS
+  if (role === "empleados") {
+    return ADOBE_WEBFORM_EMPLEADOS;
+  }
+
+  // 🔹 PROVEEDORES
+  if (role === "proveedores") {
+    return tipo === "juridico"
+      ? ADOBE_WEBFORM_URL
+      : ADOBE_WEBFORM_PROVEEDOR_NATURALES;
+  }
+
+  // 🔹 ACCIONISTAS
+  if (role === "accionistas") {
+    return tipo === "juridico"
+      ? ADOBE_WEBFORM_ACCIONISTA_JURIDICOS
+      : ADOBE_WEBFORM_ACCIONISTA_NATURALES;
+  }
+
+  // 🔹 CLIENTES
+  if (role === "clientes") {
+    return tipo === "juridico"
+      ? ADOBE_WEBFORM_CLIENTES_JURIDICOS
+      : ADOBE_WEBFORM_CLIENTES_NATURALES;
+  }
+
+  // 🔹 FALLBACK
+  return ADOBE_WEBFORM_PROVEEDOR_NATURALES;
+}
+
 export default function Segment() {
   const { segmento } = useParams();
   const { user } = useAuth();
@@ -100,6 +161,10 @@ export default function Segment() {
   );
 
   const requiredDocs = REQUIRED_DOCS_BY_SEGMENT[segmento] || [];
+
+  const tiposDocumento =
+    user?.role === "proveedores" ? TIPO_DOC_PROVEEDOR : TIPO_DOC;
+
   const mapDocDisplayName = (name) =>
     name === BENEFICIARIOS_DOC_OLD ? BENEFICIARIOS_DOC_NEW : name;
   const isBeneficiariosDoc = (name) =>
@@ -119,9 +184,47 @@ export default function Segment() {
   const [form, setForm] = useState({
     nombre: "",
     email: "",
-    tipoDocumento: "CC",
+    tipoDocumento: user?.role === "proveedores" ? "NIT" : "CC",
     numeroDocumento: "",
+    tipoPersona: "natural",
   });
+
+  const adobeFormUrl = useMemo(() => {
+    return getAdobeFormUrl(user?.role, form.tipoPersona);
+  }, [user?.role, form.tipoPersona]);
+
+  const signatureForms = useMemo(() => {
+    const forms = [
+      {
+        name: "Formulario de conocimiento de contrapartes",
+        url: adobeFormUrl,
+        documentType: "conocimiento_contrapartes",
+      },
+    ];
+
+    if (user?.role === "empleados" && EMPLOYEE_SEGMENTS.has(segmento)) {
+      forms.unshift({
+        name: "Autorización de tratamiento de datos",
+        url: TRATAMIENTO_DE_DATOS,
+        documentType: "tratamiento_datos",
+      });
+    }
+
+    return forms;
+  }, [adobeFormUrl, segmento, user?.role]);
+
+  const requiresDataTreatmentSignature = signatureForms.length > 1;
+
+  const hasRequiredSignatures = useCallback(
+    (solicitud) => {
+      const conocimiento = solicitud?.conocimiento_contrapartes;
+      return Boolean(
+        conocimiento &&
+        (!requiresDataTreatmentSignature || solicitud?.tratamiento_datos),
+      );
+    },
+    [requiresDataTreatmentSignature],
+  );
 
   // { [docName]: File }
   const [attachments, setAttachments] = useState({});
@@ -144,10 +247,9 @@ export default function Segment() {
       try {
         const res = await fetch(`${API_URL}/solicitudes/${solicitudId}`);
         const data = await res.json();
-        const firmado =
-          data?.data?.solicitud?.conocimiento_contrapartes ||
-          data?.data?.conocimiento_contrapartes ||
-          null;
+        const firmado = hasRequiredSignatures(
+          data?.data?.solicitud || data?.data,
+        );
 
         if (firmado) {
           setAdobeStep("signed");
@@ -167,7 +269,7 @@ export default function Segment() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [adobeStep, solicitudId]);
+  }, [adobeStep, hasRequiredSignatures, solicitudId]);
 
   if (!allowed) {
     return (
@@ -292,8 +394,31 @@ export default function Segment() {
       setContraparteId(cId);
       setSolicitudId(sId);
 
+      // Adobe genera el agreementId al enviar un webform público. Registramos
+      // primero cada documento para que el webhook pueda asociarlo a esta
+      // solicitud cuando reciba el agreementId.
+      for (const { documentType } of signatureForms) {
+        const sessionResp = await fetch(`${API_URL}/adobe/webform-sessions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id_solicitud: sId,
+            email: form.email,
+            document_type: documentType,
+          }),
+        });
+        const sessionData = await sessionResp.json();
+        if (!sessionResp.ok || !sessionData.success) {
+          throw new Error(
+            sessionData.message || "No se pudo preparar la firma de Adobe",
+          );
+        }
+      }
+
       // 🔥 3. ABRIR ADOBE
-      window.open(ADOBE_WEBFORM_URL, "_blank");
+      // Para empleados se abren ambos documentos. Los enlaces permanecen
+      // disponibles en pantalla por si el navegador bloquea una pestaña.
+      signatureForms.forEach(({ url }) => window.open(url, "_blank"));
 
       setAdobeStep("waiting_signature");
 
@@ -301,8 +426,9 @@ export default function Segment() {
         saving: false,
         ok: false,
         error: "",
-        message:
-          "Formulario abierto. Firma el documento y luego vuelve para guardar.",
+        message: requiresDataTreatmentSignature
+          ? "Se abrieron los dos formularios. Firma ambos documentos y luego vuelve para guardar."
+          : "Formulario abierto. Firma el documento y luego vuelve para guardar.",
       });
     } catch (err) {
       console.error(err);
@@ -334,10 +460,9 @@ export default function Segment() {
     try {
       const verifyResp = await fetch(`${API_URL}/solicitudes/${solicitudId}`);
       const verifyJson = await verifyResp.json();
-      const firmado =
-        verifyJson?.data?.solicitud?.conocimiento_contrapartes ||
-        verifyJson?.data?.conocimiento_contrapartes ||
-        null;
+      const firmado = hasRequiredSignatures(
+        verifyJson?.data?.solicitud || verifyJson?.data,
+      );
       if (!firmado) {
         setAdobeStep("waiting_signature");
         setStatus({
@@ -369,7 +494,10 @@ export default function Segment() {
         .filter((x) => x.file);
 
       if (docsConArchivo.length === 0) {
-        throw new Error("No hay archivos para enviar");
+        // El segmento de empleados existentes no requiere adjuntos. La
+        // solicitud ya fue creada y la firma fue validada antes de llegar aquí.
+        setStatus({ saving: false, ok: true, error: "", message: "" });
+        return;
       }
 
       const formData = new FormData();
@@ -404,8 +532,9 @@ export default function Segment() {
         setForm({
           nombre: "",
           email: "",
-          tipoDocumento: "CC",
+          tipoDocumento: user?.role === "proveedores" ? "NIT" : "CC",
           numeroDocumento: "",
+          tipoPersona: "natural",
         });
         setAttachments({});
         setAdobeStep("idle");
@@ -530,7 +659,7 @@ export default function Segment() {
                     setForm((f) => ({ ...f, tipoDocumento: e.target.value }))
                   }
                 >
-                  {TIPO_DOC.map((t) => (
+                  {tiposDocumento.map((t) => (
                     <option key={t} value={t}>
                       {t}
                     </option>
@@ -555,6 +684,27 @@ export default function Segment() {
                   }
                 />
               </div>
+              {user?.role !== "empleados" && (
+                <div>
+                  <label className="text-xs font-medium text-slate-700">
+                    Tipo de persona
+                  </label>
+
+                  <select
+                    className="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2.5 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
+                    value={form.tipoPersona}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        tipoPersona: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="natural">Persona Natural</option>
+                    <option value="juridico">Persona Jurídica</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
@@ -717,8 +867,18 @@ export default function Segment() {
                       continuar.
                     </p>
 
+                    {requiresDataTreatmentSignature && (
+                      <a
+                        href={TRATAMIENTO_DE_DATOS}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-3 mr-3 text-blue-700 underline text-xs"
+                      >
+                        Abrir autorización de tratamiento de datos
+                      </a>
+                    )}
                     <a
-                      href={ADOBE_WEBFORM_URL}
+                      href={adobeFormUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block mt-3 text-blue-700 underline text-xs"
@@ -772,11 +932,9 @@ export default function Segment() {
                         `${API_URL}/solicitudes/${solicitudId}`,
                       );
                       const verifyJson = await verifyResp.json();
-                      const firmado =
-                        verifyJson?.data?.solicitud
-                          ?.conocimiento_contrapartes ||
-                        verifyJson?.data?.conocimiento_contrapartes ||
-                        null;
+                      const firmado = hasRequiredSignatures(
+                        verifyJson?.data?.solicitud || verifyJson?.data,
+                      );
 
                       if (!firmado) {
                         setStatus({

@@ -6,7 +6,7 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
 
   "proveedores-generales-pj-y-financieras": [
     {
-      name: "CUESTIONARIO VINCULACIÓN DE PROVEEDORES Y CONTRATISTAS",
+      name: "LISTADO DE BENEFICIARIOS FINALES",
       required: true,
     },
     { name: "RUT", required: true },
@@ -21,7 +21,7 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
 
   "proveedores-generales-pn": [
     {
-      name: "CUESTIONARIO VINCULACIÓN DE PROVEEDORES Y CONTRATISTAS",
+      name: "LISTADO DE BENEFICIARIOS FINALES",
       required: true,
     },
     { name: "COPIA DOCUMENTO IDENTIDAD", required: true },
@@ -35,7 +35,7 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
 
   "proveedores-menores-pj": [
     {
-      name: "CUESTIONARIO VINCULACIÓN DE PROVEEDORES Y CONTRATISTAS",
+      name: "LISTADO DE BENEFICIARIOS FINALES",
       required: true,
     },
     { name: "RUT", required: true },
@@ -156,14 +156,18 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
   // EMPLEADOS
   // =========================
 
-  "todos-los-empleados": [
-    { name: "AUTORIZACIÓN DE TRATAMIENTO DE DATOS PERSONALES", required: true },
+  "empleados-nuevos": [
+    // { name: "AUTORIZACIÓN DE TRATAMIENTO DE DATOS PERSONALES", required: true },
     { name: "COPIA DOCUMENTO DE IDENTIDAD", required: true },
     { name: "RUT", required: true },
-    { name: "DECLARACIÓN DE RENTA", required: true },
-    {
-      name: "ADJUNTO DE RESULTADO CONSULTA SAGRILAFT",
-      required: true,
-    },
+    // { name: "DECLARACIÓN DE RENTA", required: true },
+    // {
+    //   name: "ADJUNTO DE RESULTADO CONSULTA SAGRILAFT",
+    //   required: true,
+    // },
   ],
+
+  "empleados-existentes":[
+    
+  ]
 };

@@ -36,7 +36,7 @@ export default function Navbar() {
             DD
           </div> */}
           <div className="flex items-center">
-            <img src="/logonew.webp" alt="Logo" className="w-32 h-12" />
+            <img src="/logoblack.png" alt="Logo" className="w-32 h-12" />
             <div>
               <h1 className="text-lg font-semibold text-gray-900">
                 Debida Diligencia

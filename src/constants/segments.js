@@ -53,12 +53,14 @@ export const SEGMENTS_BY_ROLE = {
     { slug: "personas-naturales", label: "PERSONAS NATURALES" },
     { slug: "personas-juridicas", label: "PERSONAS JURIDICAS" },
   ],
-  empleados: [{ slug: "todos-los-empleados", label: "TODOS LOS EMPLEADOS" }],
+  empleados: [{ slug: "empleados-nuevos", label: "EMPLEADOS NUEVOS" },
+    { slug: "empleados-existentes", label: "EMPLEADOS EXISTENTES" },
+  ],
 };
 
 
 export const firstSegmentOf = (role) =>
-  SEGMENTS_BY_ROLE[role]?.[0]?.slug || "todos-los-empleados";
+  SEGMENTS_BY_ROLE[role]?.[0]?.slug || "empleados-nuevos";
 
 export const findLabel = (role, slug) =>
   SEGMENTS_BY_ROLE[role]?.find((s) => s.slug === slug)?.label || null;

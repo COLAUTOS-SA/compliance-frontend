@@ -66,7 +66,7 @@ export default function Login() {
         <div className="grid w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_30px_80px_rgba(2,6,23,0.65)] backdrop-blur-xl lg:grid-cols-2">
           <section className="hidden flex-col justify-between p-10 text-white lg:flex">
             <div>
-              <img src="/logonew2.png" alt="COLAUTOS-LOGO" className="h-16 w-auto" />
+              <img src="/logo.png" alt="COLAUTOS-LOGO" className="h-16 w-auto" />
               <p className="mt-10 inline-flex items-center gap-2 rounded-full border border-sky-300/40 bg-sky-300/10 px-4 py-1.5 text-xs font-medium tracking-wide text-sky-100">
                 <FiShield />
                 Plataforma segura de cumplimiento
