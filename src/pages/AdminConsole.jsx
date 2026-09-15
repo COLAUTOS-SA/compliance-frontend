@@ -191,6 +191,7 @@ export default function AdminConsole() {
   const [savingModal, setSavingModal] = useState(false);
   const [modalMsg, setModalMsg] = useState({ ok: "", err: "" });
   const [solicitudStatusEdit, setSolicitudStatusEdit] = useState("pendiente");
+  const [solicitudObservacion, setSolicitudObservacion] = useState("");
   const [responseFile, setResponseFile] = useState(null);
   const [uploadingResponse, setUploadingResponse] = useState(false);
   const [responseMsg, setResponseMsg] = useState({ ok: "", err: "" });
@@ -242,11 +243,12 @@ export default function AdminConsole() {
             if (!c) return null;
 
             return {
-              id: sol.id, // id solicitud
+              id: sol.id,
               id_solicitud: sol.id,
               id_contraparte: c.id,
               id_estado_solicitud:
                 sol.id_estado_solicitud ?? sol.id_ult_estado ?? null,
+              observacion: sol.observacion ?? "",
               counterpartType: c.Tipo_Contraparte,
               id_segmento: c.id_segmento,
               segmentName: c.Segmento,
@@ -346,11 +348,14 @@ export default function AdminConsole() {
 
   useEffect(() => {
     if (!openRow) return;
+
     setSolicitudStatusEdit(
       mapSolicitudEstadoToStatus(
         openRow.id_estado_solicitud ?? openRow.id_ult_estado ?? 1,
       ),
     );
+
+    setSolicitudObservacion(openRow.observacion ?? "");
   }, [openRow]);
 
   // Documentos (archivos) SOLO de la solicitud del modal
@@ -602,15 +607,15 @@ export default function AdminConsole() {
   // Guardar SOLO los archivos del modal
   const saveModal = async () => {
     if (!openRow) return;
+
     setSavingModal(true);
     setModalMsg({ ok: "", err: "" });
 
     try {
-      // 1) Lista de archivos que están en este modal (solicitud)
+      // 1) Lista de archivos que están en este modal
       const archivos = docsInModal;
 
-      // 2) Enviar 1 PUT por archivo
-      //    Si quieres optimizar: luego creas un endpoint bulk, pero con tu API actual es 1x1.
+      // 2) Guardar estado y concepto de cada archivo
       for (const a of archivos) {
         const archivoId = Number(a.id);
         const cell = grid[archivoId] || {};
@@ -625,11 +630,12 @@ export default function AdminConsole() {
           body: JSON.stringify({
             id_estado_archivo,
             concepto: (cell.concepto ?? "").toString(),
-            id_usuario_concepto: user?.id || null, // si tu auth guarda el id
+            id_usuario_concepto: user?.id || null,
           }),
         });
       }
 
+      // 3) Convertir estado visual a ID de BD
       const solicitudEstadoId =
         solicitudStatusEdit === "aprobado"
           ? 2
@@ -637,36 +643,77 @@ export default function AdminConsole() {
             ? 3
             : 1;
 
+      // 4) Guardar estado + observación de la solicitud
       await fetchJson(`${API_URL}/solicitudes/${openRow.id_solicitud}/estado`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id_estado_solicitud: solicitudEstadoId,
+          observacion: solicitudObservacion.trim() || null,
         }),
       });
 
-      // 3) Refrescar archivos para que el modal muestre lo persistido (fecha, estado, etc.)
+      // 5) Refrescar archivos
       const archJson = await fetchJson(`${API_URL}/archivos`);
       const archivosActualizados = archJson.data || [];
       setArchivosAll(archivosActualizados);
 
-      // Rehidratar grid desde lo persistido
+      // 6) Rehidratar grid
       const nextGrid = {};
+
       for (const a of archivosActualizados) {
         const archivoId = Number(a.id);
+
         if (!archivoId) continue;
+
         nextGrid[archivoId] = {
           status: mapArchivoToStatus(a),
           concepto: (a.concepto ?? "").toString(),
           fecha_concepto: a.fecha_concepto || null,
         };
       }
+
       setGrid(nextGrid);
 
-      setModalMsg({ ok: "Conceptos guardados correctamente.", err: "" });
+      // 7) Actualizar la fila de la solicitud
+      const solJson = await fetchJson(`${API_URL}/solicitudes`);
+      const solicitudesActualizadas = solJson.data || [];
+
+      const solicitudActualizada = solicitudesActualizadas.find(
+        (sol) => Number(sol.id) === Number(openRow.id_solicitud),
+      );
+
+      if (solicitudActualizada) {
+        setRows((current) =>
+          current.map((row) =>
+            Number(row.id_solicitud) === Number(openRow.id_solicitud)
+              ? {
+                  ...row,
+                  id_estado_solicitud:
+                    solicitudActualizada.id_estado_solicitud ??
+                    solicitudActualizada.id_ult_estado ??
+                    row.id_estado_solicitud,
+                  observacion: solicitudActualizada.observacion ?? "",
+                  fecha_ult_actualizacion:
+                    solicitudActualizada.fecha_ult_actualizacion ??
+                    row.fecha_ult_actualizacion,
+                }
+              : row,
+          ),
+        );
+      }
+
+      setModalMsg({
+        ok: "Cambios de la solicitud guardados correctamente.",
+        err: "",
+      });
     } catch (e) {
       console.error(e);
-      setModalMsg({ ok: "", err: e.message || "Error guardando conceptos" });
+
+      setModalMsg({
+        ok: "",
+        err: e.message || "Error guardando los cambios de la solicitud",
+      });
     } finally {
       setSavingModal(false);
     }
@@ -1343,6 +1390,22 @@ export default function AdminConsole() {
                       <option value="rechazado">Rechazado</option>
                     </select>
                   </div>
+                </div>
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                  <label className="text-[11px] uppercase tracking-wide text-amber-800 font-semibold">
+                    Observación de la solicitud
+                  </label>
+
+                  <textarea
+                    value={solicitudObservacion}
+                    onChange={(e) => setSolicitudObservacion(e.target.value)}
+                    placeholder="Escribe una observación general sobre esta solicitud (opcional)..."
+                    className="mt-1.5 w-full min-h-[80px] resize-none rounded-md border border-amber-200 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                  />
+
+                  <p className="mt-1 text-[10px] text-amber-700">
+                    Esta observación aplica a toda la solicitud y es opcional.
+                  </p>
                 </div>
               </div>
               {/* FORMULARIOS FIRMADOS */}

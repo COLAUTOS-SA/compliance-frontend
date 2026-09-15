@@ -47,12 +47,12 @@ export const SEGMENTS_BY_TYPE = {
 
   clientes: [
     {
-      slug: "personas-juridicas-venta-vehiculos",
-      label: "PERSONAS JURIDICAS VENTA DE VEHÍCULOS",
+      slug: "clientes-otros-pj",
+      label: "CLIENTES Y OTROS PERSONA JURIDICA",
       segmentId: 8,
     },
     {
-      slug: "aseguradoras-y-financieras",
+      slug: "clientes-aseguradoras-financieras",
       label: "ASEGURADORAS Y FINANCIERAS",
       segmentId: 9,
     },
@@ -62,8 +62,8 @@ export const SEGMENTS_BY_TYPE = {
       segmentId: 10,
     },
     {
-      slug: "aliados-retomadores-pn",
-      label: "ALIADOS RETOMADORES Y OTROS PERSONA NATURAL",
+      slug: "clientes-otros-pn",
+      label: "CLIENTES Y OTROS PERSONA NATURAL",
       segmentId: 11,
     },
   ],
@@ -85,12 +85,12 @@ export const SEGMENTS_BY_TYPE = {
     {
       slug: "empleados-nuevos",
       label: "EMPLEADOS NUEVOS",
-      segmentId: 14,
+      segmentId: 15,
     },
     {
       slug: "empleados-existentes",
       label: "EMPLEADOS EXISTENTES",
-      segmentId: 15,
+      segmentId: 16,
     },
   ],
 };
@@ -105,13 +105,13 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
     "CC Representante",
     "Autorización de Datos",
   ],
-  "aseguradoras-y-financieras": [
+  "clientes-aseguradoras-financieras": [
     "RUT",
     "Certificación Bancaria",
     "Cámara de Comercio",
     "Representación Legal",
   ],
-  "aliados-retomadores-pj": [
+  "clientes-aliados-pj": [
     "RUT",
     "Cámara de Comercio",
     "CC Representante",

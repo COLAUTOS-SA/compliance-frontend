@@ -3,17 +3,17 @@
 export const SEGMENTS_BY_ROLE = {
   clientes: [
     {
-      slug: "personas-juridicas-venta-vehiculos",
-      label: "PERSONAS JURIDICAS VENTA DE VEHÍCULOS",
+      slug: "clientes-otros-pj",
+      label: "CLIENTES Y OTROS PERSONA JURIDICA",
     },
-    { slug: "aseguradoras-y-financieras", label: "ASEGURADORAS Y FINANCIERAS" },
+    { slug: "clientes-aseguradoras-financieras", label: "ASEGURADORAS Y FINANCIERAS" },
     {
-      slug: "aliados-retomadores-pj",
+      slug: "clientes-aliados-pj",
       label: "ALIADOS RETOMADORES Y OTROS PERSONA JURIDICA",
     },
     {
-      slug: "aliados-retomadores-pn",
-      label: "ALIADOS RETOMADORES Y OTROS PERSONA NATURAL",
+      slug: "clientes-otros-pn",
+      label: "CLIENTES Y OTROS PERSONA NATURAL",
     },
   ],
   proveedores: [

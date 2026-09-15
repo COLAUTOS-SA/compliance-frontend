@@ -72,13 +72,12 @@ function mapSegmentSlugToSegmentId(segmento) {
 
     // CLIENTES
     "personas-juridicas-venta-vehiculos": 8,
-    "aseguradoras-y-financieras": 9,
+    "clientes-aseguradoras-financieras": 9,
     "aliados-retomadores-pj": 10,
     "aliados-retomadores-pn": 11,
-    "clientes-pj-vehiculos": 8, // legacy
-    "clientes-aseguradoras-financieras": 9, // legacy
+    "clientes-otros-pj": 8, // legacy
     "clientes-aliados-pj": 10, // legacy
-    "clientes-aliados-pn": 11, // legacy
+    "clientes-otros-pn": 11, // legacy
 
     // ACCIONISTAS
     "personas-naturales": 12,

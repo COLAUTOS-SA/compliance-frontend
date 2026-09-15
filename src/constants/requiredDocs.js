@@ -20,42 +20,38 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
   ],
 
   "proveedores-generales-pn": [
-    {
-      name: "LISTADO DE BENEFICIARIOS FINALES",
-      required: true,
-    },
     { name: "COPIA DOCUMENTO IDENTIDAD", required: true },
     { name: "RUT", required: true },
     { name: "CERTIFICACIÓN BANCARIA", required: true },
-    { name: "REFERENCIAS COMERCIALES", required: true },
-    { name: "DECLARACIÓN DE RENTA", required: true },
-    { name: "CAMARA DE COMERCIO", required: true },
-    { name: "ESTADOS FINANCIEROS", required: true },
+    { name: "REFERENCIAS COMERCIALES", required: false },
+    { name: "DECLARACIÓN DE RENTA", required: false },
+    { name: "CAMARA DE COMERCIO", required: false },
+    { name: "ESTADOS FINANCIEROS", required: false },
   ],
 
   "proveedores-menores-pj": [
     {
       name: "LISTADO DE BENEFICIARIOS FINALES",
-      required: true,
+      required: false,
     },
     { name: "RUT", required: true },
-    { name: "CAMARA DE COMERCIO", required: true },
+    { name: "CAMARA DE COMERCIO", required: false },
     { name: "COPIA DOCUMENTO IDENTIDAD REPRESENTANTE LEGAL", required: true },
     { name: "CERTIFICACIÓN BANCARIA", required: true },
-    { name: "DECLARACIÓN DE RENTA", required: true },
-    { name: "ESTADOS FINANCIEROS", required: true },
-    { name: "COMPOSICIÓN ACCIONARIA", required: true },
-    { name: "REFERENCIAS COMERCIALES", required: true },
+    { name: "DECLARACIÓN DE RENTA", required: false },
+    { name: "ESTADOS FINANCIEROS", required: false },
+    { name: "COMPOSICIÓN ACCIONARIA", required: false },
+    { name: "REFERENCIAS COMERCIALES", required: false },
   ],
 
   "proveedores-menores-pn": [
     { name: "COPIA DOCUMENTO IDENTIDAD", required: true },
     { name: "RUT", required: true },
     { name: "CERTIFICACIÓN BANCARIA", required: true },
-    { name: "DECLARACIÓN DE RENTA", required: true },
-    { name: "CAMARA DE COMERCIO", required: true },
-    { name: "ESTADOS FINANCIEROS", required: true },
-    { name: "REFERENCIAS COMERCIALES", required: true },
+    { name: "DECLARACIÓN DE RENTA", required: false },
+    { name: "CAMARA DE COMERCIO", required: false },
+    { name: "ESTADOS FINANCIEROS", required: false },
+    { name: "REFERENCIAS COMERCIALES", required: false },
   ],
 
   "proveedores-menores-caja-viaticos": [{ name: "RUT", required: true }],
@@ -82,7 +78,7 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
   // CLIENTES
   // =========================
 
-  "clientes-pj-vehiculos": [
+  "clientes-otros-pj": [
     { name: "RUT", required: true },
     { name: "CAMARA DE COMERCIO", required: true },
     { name: "COPIA DOCUMENTO IDENTIDAD REPRESENTANTE LEGAL", required: true },
@@ -101,7 +97,7 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
     { name: "ESTADOS FINANCIEROS", required: true },
     { name: "COMPOSICIÓN ACCIONARIA", required: true },
     { name: "CERTIFICACIÓN BANCARIA", required: true },
-    { name: "REFERENCIAS COMERCIALES", required: true },
+    { name: "REFERENCIAS COMERCIALES", required: false },
   ],
 
   "clientes-aliados-pj": [
@@ -112,17 +108,17 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
     { name: "ESTADOS FINANCIEROS", required: true },
     { name: "COMPOSICIÓN ACCIONARIA", required: true },
     { name: "CERTIFICACIÓN BANCARIA", required: true },
-    { name: "REFERENCIAS COMERCIALES", required: true },
+    { name: "REFERENCIAS COMERCIALES", required: false },
   ],
 
-  "clientes-aliados-pn": [
-    { name: "COPIA DOCUMENTO IDENTIDAD", required: true },
-    { name: "RUT", required: true },
-    { name: "CERTIFICACIÓN BANCARIA", required: true },
-    { name: "DECLARACIÓN DE RENTA", required: true },
-    { name: "CAMARA DE COMERCIO", required: true },
-    { name: "ESTADOS FINANCIEROS", required: true },
-    { name: "REFERENCIAS COMERCIALES", required: true },
+  "clientes-otros-pn": [
+    { name: "COPIA DOCUMENTO IDENTIDAD", required: false },
+    { name: "RUT", required: false },
+    { name: "CERTIFICACIÓN BANCARIA", required: false },
+    { name: "DECLARACIÓN DE RENTA", required: false },
+    { name: "CAMARA DE COMERCIO", required: false },
+    { name: "ESTADOS FINANCIEROS", required: false },
+    { name: "REFERENCIAS COMERCIALES", required: false },
   ],
 
   // =========================
