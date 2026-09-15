@@ -133,7 +133,7 @@ export const REQUIRED_DOCS_BY_SEGMENT = {
 
   "personas-naturales": [
     // Personas naturales
-    { name: "DECLARACIÓN DE ORIGEN DE FONDOS", required: true },
+    { name: "DECLARACIÓN DE ORIGEN DE FONDOS", required: false },
     { name: "COPIA DOCUMENTO IDENTIDAD", required: true },
     { name: "RUT", required: true },
   ],
